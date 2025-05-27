@@ -4,7 +4,7 @@
 
 Yet another codesigning app, this is a fork from Feather and merge with Esign, you can create issue in [Issue](https://github.com/Nyasami/Ksign-public/issues) and also request a new feature to the app!
 ## Help
-You can also join Ksign Discord [here](https://discord.gg/sfbZfQzVdQ)
+You can also join Ksign Discord [here](https://discord.gg/sfbZfQzVdQ) for better communication.
 
 If you stuck on installing "realy to install" then do this:
 Go to settings > server options > online install method > go back to that settings then use custom server > type in “https://api.palera.in” then try again
