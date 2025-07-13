@@ -76,12 +76,7 @@ struct FileRow: View {
             
             Spacer()
             
-            if isSelected {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.blue)
-                    .font(.system(size: 22))
-                    .transition(.scale.combined(with: .opacity))
-            } else if file.isDirectory && showChevron {
+            if file.isDirectory && showChevron {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.secondary)
                     .font(.system(size: 14, weight: .semibold))

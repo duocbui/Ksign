@@ -18,8 +18,7 @@ class FilesViewModel: ObservableObject {
     @Published var files: [FileItem] = []
     @Published var isLoading = false
     @Published var currentDirectory: URL
-    @Published var selectedItems: Set<FileItem> = []
-    @Published var isEditMode: EditMode = .inactive
+    @Published var selectedItems: Set<FileItem.ID> = []
     @Published var error: String?
     @Published var showingError = false
     @Published var showingNewFolderDialog = false
@@ -94,13 +93,10 @@ class FilesViewModel: ObservableObject {
     func deleteSelectedItems() {
         guard !selectedItems.isEmpty else { return }
         
-        let itemsToDelete = Array(selectedItems)
+        let itemsToDelete = files.filter { selectedItems.contains($0.id) }
         
         withAnimation {
             selectedItems.removeAll()
-            if isEditMode == .active {
-                isEditMode = .inactive
-            }
         }
         
         deleteMultipleFilesOptimized(itemsToDelete)
@@ -426,7 +422,9 @@ class FilesViewModel: ObservableObject {
         var successCount = 0
         var failCount = 0
         
-        for item in selectedItems {
+        let itemsToMove = files.filter { selectedItems.contains($0.id) }
+        
+        for item in itemsToMove {
             let destinationFileURL = destinationURL.appendingPathComponent(item.name)
             
             do {
@@ -445,9 +443,6 @@ class FilesViewModel: ObservableObject {
         
         withAnimation {
             selectedItems.removeAll()
-            if isEditMode == .active {
-                isEditMode = .inactive
-            }
         }
         
         if failCount == 0 {

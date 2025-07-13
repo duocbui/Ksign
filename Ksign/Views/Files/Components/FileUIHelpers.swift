@@ -11,15 +11,6 @@ import SwiftUI
 
 struct FileUIHelpers {
     
-    // MARK: - Selection Background
-    
-    static func selectionBackground(for file: FileItem, selectedItems: Set<FileItem>) -> some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(selectedItems.contains(file) ? Color.blue.opacity(0.1) : Color.clear)
-            .padding(.horizontal, 4)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: selectedItems.contains(file))
-    }
-    
     // MARK: - Swipe Actions
     
     @ViewBuilder
@@ -65,21 +56,13 @@ struct FileUIHelpers {
         selectedFileForAction: Binding<FileItem?>,
         showingActionSheet: Binding<Bool>
     ) {
-        if viewModel.isEditMode == .active {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                if viewModel.selectedItems.contains(file) {
-                    viewModel.selectedItems.remove(file)
-                } else {
-                    viewModel.selectedItems.insert(file)
-                }
-            }
-        } else {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
-            
-            selectedFileForAction.wrappedValue = file
-            showingActionSheet.wrappedValue = true
-        }
+        // SwiftUI handles selection automatically in edit mode
+        // This method only handles file actions when not in edit mode
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        
+        selectedFileForAction.wrappedValue = file
+        showingActionSheet.wrappedValue = true
     }
     
     // MARK: - Progress View

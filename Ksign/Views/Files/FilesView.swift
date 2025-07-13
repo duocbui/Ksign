@@ -95,11 +95,11 @@ struct FilesView: View {
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         addButton
-                        editButton
+                        EditButton()
                     }
                     
-                    if viewModel.isEditMode == .active {
-                        ToolbarItemGroup(placement: .bottomBar) {
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        if !viewModel.selectedItems.isEmpty {
                             selectAllButton
                             Spacer()
                             moveButton
@@ -237,39 +237,28 @@ struct FilesView: View {
     }
     
     private var fileListView: some View {
-        List {
-            ForEach(filteredFiles) { file in
-                if file.isDirectory {
-                    NavigationLink(destination: FilesView(directoryURL: file.url)) {
-                        FileRow(file: file, isSelected: viewModel.selectedItems.contains(file), showChevron: false)
-                    }
-                    .disabled(viewModel.isEditMode == .active)
-                    .contextMenu {
-                        FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        swipeActions(for: file)
-                    }
-                    .listRowBackground(selectionBackground(for: file))
-                } else {
-                    Button(action: {
-                        handleFileTap(file)
-                    }) {
-                        FileRow(file: file, isSelected: viewModel.selectedItems.contains(file), showChevron: false)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        swipeActions(for: file)
-                    }
-                    .listRowBackground(selectionBackground(for: file))
+        List(filteredFiles, selection: $viewModel.selectedItems) { file in
+            if file.isDirectory {
+                NavigationLink(destination: FilesView(directoryURL: file.url)) {
+                    FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id), showChevron: false)
                 }
+                .contextMenu {
+                    FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
+                }
+                .swipeActions(edge: .trailing) {
+                    swipeActions(for: file)
+                }
+            } else {
+                FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id), showChevron: false)
+                    .contextMenu {
+                        FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        swipeActions(for: file)
+                    }
             }
         }
         .listStyle(.plain)
-        .environment(\.editMode, $viewModel.isEditMode)
     }
     
     // MARK: - Helper Properties
@@ -352,25 +341,13 @@ struct FilesView: View {
         .buttonStyle(.plain)
     }
     
-    private var editButton: some View {
-        Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                viewModel.isEditMode = viewModel.isEditMode == .active ? .inactive : .active
-                if viewModel.isEditMode == .inactive {
-                    viewModel.selectedItems.removeAll()
-                }
-            }
-        } label: {
-            Text(viewModel.isEditMode == .active ? String(localized: "Done") : String(localized: "Edit"))
-                .fontWeight(.medium)
-        }
-    }
+
     
     private var selectAllButton: some View {
         Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                for file in viewModel.files {
-                    viewModel.selectedItems.insert(file)
+                for file in filteredFiles {
+                    viewModel.selectedItems.insert(file.id)
                 }
             }
         } label: {
@@ -391,7 +368,8 @@ struct FilesView: View {
     private var shareButton: some View {
         Button {
             if !viewModel.selectedItems.isEmpty {
-                let urls = viewModel.selectedItems.map { $0.url }
+                let selectedFiles = viewModel.files.filter { viewModel.selectedItems.contains($0.id) }
+                let urls = selectedFiles.map { $0.url }
                 
                 for url in urls {
                     url.startAccessingSecurityScopedResource()
@@ -423,17 +401,6 @@ struct FilesView: View {
     }
     
     // MARK: - Actions
-    
-    private func handleFileTap(_ file: FileItem) {
-        if !file.isDirectory {
-            FileUIHelpers.handleFileTap(
-                file,
-                viewModel: viewModel,
-                selectedFileForAction: $selectedFileForAction,
-                showingActionSheet: $showingActionSheet
-            )
-        }
-    }
     
     // File action sheet
     private func fileActionSheet() -> ActionSheet {
@@ -623,10 +590,6 @@ struct FilesView: View {
     }
     
     // MARK: - UI Helpers
-    
-    private func selectionBackground(for file: FileItem) -> some View {
-        FileUIHelpers.selectionBackground(for: file, selectedItems: viewModel.selectedItems)
-    }
     
     @ViewBuilder
     private func swipeActions(for file: FileItem) -> some View {
