@@ -98,16 +98,17 @@ struct FilesView: View {
                         addButton
                         EditButton()
                     }
-                    
-                    ToolbarItemGroup(placement: .bottomBar) {
-                        if !viewModel.selectedItems.isEmpty {
-                            selectAllButton
-                            Spacer()
-                            moveButton
-                            Spacer()
-                            shareButton
-                            Spacer()
-                            deleteButton
+                    if editMode?.wrappedValue == .active {
+                        ToolbarItemGroup(placement: .bottomBar) {
+                            if !viewModel.selectedItems.isEmpty {
+                                selectAllButton
+                                Spacer()
+                                moveButton
+                                Spacer()
+                                shareButton
+                                Spacer()
+                                deleteButton
+                            }
                         }
                     }
                 }
@@ -238,7 +239,7 @@ struct FilesView: View {
     }
     
     private var fileListView: some View {
-        List(filteredFiles, selection: editMode?.wrappedValue == .active ? $viewModel.selectedItems : nil) { file in
+        List(filteredFiles, selection: $viewModel.selectedItems) { file in
             if file.isDirectory {
                 NavigationLink(destination: FilesView(directoryURL: file.url)) {
                     FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id))
