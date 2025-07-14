@@ -10,12 +10,10 @@ import SwiftUI
 struct FileRow: View {
     let file: FileItem
     let isSelected: Bool
-    let showChevron: Bool
     
-    init(file: FileItem, isSelected: Bool, showChevron: Bool = true) {
+    init(file: FileItem, isSelected: Bool) {
         self.file = file
         self.isSelected = isSelected
-        self.showChevron = showChevron
     }
     
     @State private var isHovering = false
@@ -50,7 +48,6 @@ struct FileRow: View {
             }
             .font(.title2)
             .frame(width: 32, height: 32)
-            .contentShape(Rectangle())
             .animation(.spring(), value: file.isDirectory)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -77,16 +74,9 @@ struct FileRow: View {
                     }
                 }
             }
-            
-            Spacer()
-            
-            if file.isDirectory && showChevron {
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 14, weight: .semibold))
-            }
         }
         .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 8)

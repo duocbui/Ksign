@@ -32,6 +32,7 @@ struct FilesView: View {
     @State private var shareItems: [Any] = []
     
     // MARK: - Initializers
+    @Environment(\.editMode) private var editMode
     
     init() {
         self.directoryURL = nil
@@ -237,10 +238,10 @@ struct FilesView: View {
     }
     
     private var fileListView: some View {
-        List(filteredFiles, selection: $viewModel.selectedItems) { file in
+        List(filteredFiles, selection: editMode?.wrappedValue == .active ? $viewModel.selectedItems : nil) { file in
             if file.isDirectory {
                 NavigationLink(destination: FilesView(directoryURL: file.url)) {
-                    FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id), showChevron: false)
+                    FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id))
                 }
                 .contextMenu {
                     FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
@@ -249,13 +250,22 @@ struct FilesView: View {
                     swipeActions(for: file)
                 }
             } else {
-                FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id), showChevron: false)
+                let fileRow = FileRow(file: file, isSelected: viewModel.selectedItems.contains(file.id))
                     .contextMenu {
                         FileContextMenu(viewModel: viewModel, file: file, showingActionSheet: $showingActionSheet, selectedFileForAction: $selectedFileForAction)
                     }
                     .swipeActions(edge: .trailing) {
                         swipeActions(for: file)
                     }
+                // Very clever fix >.<
+                if editMode?.wrappedValue == .inactive {
+                    fileRow
+                        .onTapGesture {
+                            handleFileTap(file)
+                        }
+                } else {
+                    fileRow
+                }
             }
         }
         .listStyle(.plain)
@@ -401,6 +411,12 @@ struct FilesView: View {
     }
     
     // MARK: - Actions
+
+    private func handleFileTap(_ file: FileItem) {
+        if !file.isDirectory {
+            FileUIHelpers.handleFileTap(file, viewModel: viewModel, selectedFileForAction: $selectedFileForAction, showingActionSheet: $showingActionSheet)
+        }
+    }
     
     // File action sheet
     private func fileActionSheet() -> ActionSheet {
@@ -595,4 +611,8 @@ struct FilesView: View {
     private func swipeActions(for file: FileItem) -> some View {
         FileUIHelpers.swipeActions(for: file, viewModel: viewModel)
     }
-} 
+}
+
+#Preview {
+    FilesView()
+}
